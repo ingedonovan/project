@@ -26,6 +26,25 @@
     // Parse the Data
     d3.json("https://raw.githubusercontent.com/ingedonovan/project/main/zipcode_frequency.json", function(data) {
         console.log(data);
+
+        // Define the threshold frequency
+        var threshold = 100; // Adjust this threshold as needed
+
+        // Filter the data array to remove objects with frequencies below the threshold
+        data = data.filter(function(d) {
+        return d.frequency >= threshold;
+        });
+
+        //sorting the data
+        data.sort(function(a, b) {
+        return b.frequency - a.frequency;
+         });
+
+        // Define the color scale
+        var colorScale = d3.scaleLinear()
+        .domain([0, d3.max(data, function(d) { return d.frequency; })])
+        .range(["lightblue", "blue"]); // Adjust colors as needed
+        
         // X axis
         var x = d3.scaleBand()
             .range([0, width])
@@ -51,9 +70,31 @@
             .enter()
             .append("rect")
                 .attr("x", function(d) { return x(d.zipcode); })
-                .attr("y", function(d) { return y(d.frequency); })
+                .attr("y", height) // Set initial y position to the bottom of the chart
                 .attr("width", x.bandwidth())
-                .attr("height", function(d) { return height - y(d.frequency); })
-                .attr("fill", "#69b3a2");
-    });
+                .attr("height", 0) // Set initial height to 0
+                .attr("fill", function(d) { return colorScale(d.frequency); })
+            .transition() // Apply transition to animate bars
+            .duration(800)
+            .attr("y", function(d) { return y(d.frequency); })
+            .attr("height", function(d) { return height - y(d.frequency); })
+            .delay(function(d, i) { return i * 100; }); // Delay animation for each bar
+                
+        // Add X axis label:
+        svg.append("text")
+            .attr("text-anchor", "end")
+            .attr("x", width)
+            .attr("y", height + margin.top + 20)
+            .text("Zipcode");
+           
+        // Y axis label:
+        svg.append("text")
+            .attr("text-anchor", "end")
+            .attr("transform", "rotate(-90)")
+            .attr("y", -margin.left+10)
+            .attr("x", -margin.top)
+            .text("Count")
+        });
+
+
 </script>
